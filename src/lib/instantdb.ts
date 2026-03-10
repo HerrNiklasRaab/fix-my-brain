@@ -1,14 +1,15 @@
-import { init } from "@instantdb/react";
+import { init, i } from "@instantdb/react";
 
-type Schema = {
-  messages: {
-    id: string;
-    text: string;
-    username: string;
-    createdAt: number;
-  };
-};
+const schema = i.schema({
+  entities: {
+    messages: i.entity({
+      text: i.string(),
+      username: i.string(),
+      createdAt: i.number(),
+    }),
+  },
+});
 
-const db = init<Schema>({ appId: "55b47b7d-15ce-4379-aa97-d2f947668041", devtool: false });
+const db = init({ appId: "55b47b7d-15ce-4379-aa97-d2f947668041", devtool: false, schema });
 
 export default db;
