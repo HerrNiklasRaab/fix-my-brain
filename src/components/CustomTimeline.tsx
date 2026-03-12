@@ -23,6 +23,8 @@ function formatDuration(ms: number): string {
  * Content-based timeline: width is proportional to actual content duration,
  * wall-clock gaps between segments are collapsed.
  */
+export { formatDuration };
+
 export default function CustomTimeline({
   segments,
   wallClockTime,
@@ -178,7 +180,7 @@ export default function CustomTimeline({
           style={{ left: `${playheadFraction * 100}%` }}
         />
       </div>
-      <span className="shrink-0 text-xs font-mono text-neutral-400">
+      <span className="hidden shrink-0 text-xs font-mono text-neutral-400 md:block">
         {elapsedLabel} / {totalLabel}
       </span>
     </div>

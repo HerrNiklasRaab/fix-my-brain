@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Hls from "hls.js";
 import ChatPanel from "@/components/ChatPanel";
-import CustomTimeline from "@/components/CustomTimeline";
+import CustomTimeline, { formatDuration } from "@/components/CustomTimeline";
 import VideoControls from "@/components/VideoControls";
+import MobileVideoControls from "@/components/MobileVideoControls";
 import {
   useVideoPlaybackTime,
   resolveVideoPosition,
@@ -167,6 +168,8 @@ export default function Livestream() {
   const handleSeek = useCallback(
     (targetWallClock: number) => {
       const { videoTime, source } = resolveVideoPosition(targetWallClock, segments);
+      const activeVideo = activeSourceRef.current === "live" ? liveVideoRef.current : vodVideoRef.current;
+      const wasPaused = activeVideo?.paused ?? false;
 
       if (source === "vod") {
         const vodVideo = vodVideoRef.current;
@@ -177,7 +180,7 @@ export default function Livestream() {
           activeSourceRef.current = "vod";
         }
         vodVideo.currentTime = videoTime;
-        vodVideo.play().catch(() => {});
+        if (!wasPaused) vodVideo.play().catch(() => {});
       } else {
         // Live — compute DVR offset
         const liveVideo = liveVideoRef.current;
@@ -200,7 +203,7 @@ export default function Livestream() {
         if (liveEdge != null) {
           liveVideo.currentTime = Math.max(0, liveEdge - secondsAgo);
         }
-        liveVideo.play().catch(() => {});
+        if (!wasPaused) liveVideo.play().catch(() => {});
       }
     },
     [segments]
@@ -215,6 +218,38 @@ export default function Livestream() {
   const goVod = useCallback(() => {
     switchTo("vod");
   }, [switchTo]);
+
+  // Compute time label for mobile controls
+  const timeLabel = useMemo(() => {
+    if (!segments.length || wallClockTime == null) return undefined;
+    const vodSegs = segments.filter((s) => !s.isLive);
+    const liveSeg = segments.find((s) => s.isLive);
+    const vodContentMs = vodSegs.reduce((sum, s) => sum + s.duration * 1000, 0);
+    const liveContentMs = liveSeg ? liveSeg.duration * 1000 : 0;
+    const totalMs = vodContentMs + liveContentMs;
+
+    let elapsed = 0;
+    let accumulated = 0;
+    for (const seg of vodSegs) {
+      const segEnd = seg.startTime + seg.duration * 1000;
+      if (wallClockTime >= seg.startTime && wallClockTime < segEnd) {
+        elapsed = accumulated + (wallClockTime - seg.startTime);
+        break;
+      }
+      if (wallClockTime < seg.startTime) {
+        elapsed = accumulated;
+        break;
+      }
+      accumulated += seg.duration * 1000;
+    }
+    if (liveSeg && wallClockTime >= liveSeg.startTime) {
+      elapsed = vodContentMs + Math.min(wallClockTime - liveSeg.startTime, liveContentMs);
+    } else if (accumulated === vodContentMs && !liveSeg) {
+      elapsed = vodContentMs;
+    }
+
+    return `${formatDuration(Math.max(0, elapsed))} / ${formatDuration(totalMs)}`;
+  }, [segments, wallClockTime]);
 
   return (
     <div className="flex h-full flex-col bg-black text-white">
@@ -251,8 +286,8 @@ export default function Livestream() {
             </div>
           )}
 
-          {/* Custom Controls */}
-          <div className="absolute inset-0 z-20">
+          {/* Desktop Controls */}
+          <div className="absolute inset-0 z-20 hidden md:block">
             <VideoControls
               videoRef={activeVideoRef}
               containerRef={containerRef}
@@ -267,6 +302,25 @@ export default function Livestream() {
                 onSeek={handleSeek}
               />
             </VideoControls>
+          </div>
+
+          {/* Mobile Controls */}
+          <div className="absolute inset-0 z-20 md:hidden">
+            <MobileVideoControls
+              videoRef={activeVideoRef}
+              containerRef={containerRef}
+              isLive={isLive}
+              onGoLive={hasLiveStream ? goLive : undefined}
+              onGoVod={hasLiveStream ? goVod : undefined}
+              timeLabel={timeLabel}
+            >
+              <CustomTimeline
+                segments={segments}
+                wallClockTime={wallClockTime}
+                isLive={isLive}
+                onSeek={handleSeek}
+              />
+            </MobileVideoControls>
           </div>
         </div>
 

@@ -98,7 +98,7 @@ export default function ChatPanel({ wallClockTime = null, segmentStartTime = nul
   }
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col md:w-80 md:flex-initial md:border-l-2 md:border-neutral-800">
+    <div className="flex min-h-0 w-full flex-1 flex-col border-t-2 border-neutral-800 md:w-80 md:flex-initial md:border-t-0 md:border-l-2">
       {!isLive && (
         <div className="border-b-2 border-neutral-800 bg-neutral-900 px-4 py-2 text-center text-xs font-black uppercase tracking-wider text-yellow-500">
           Viewing past chat

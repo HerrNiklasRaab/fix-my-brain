@@ -29,8 +29,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} flex h-dvh flex-col overflow-hidden antialiased`}
       >
-        <nav className="shrink-0 border-b-2 border-neutral-800 bg-black text-white">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+        <nav className="relative z-50 shrink-0 border-b-2 border-neutral-800 bg-black text-white">
+          <div className="flex items-center justify-between px-6 py-3">
             <Link href="/" className="text-xl font-black uppercase tracking-widest">
               FIX MY BRAIN
             </Link>
