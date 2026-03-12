@@ -27,9 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} flex h-dvh flex-col overflow-hidden antialiased`}
       >
-        <nav className="sticky top-0 z-50 border-b-2 border-neutral-800 bg-black text-white">
+        <nav className="shrink-0 border-b-2 border-neutral-800 bg-black text-white">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
             <Link href="/" className="text-xl font-black uppercase tracking-widest">
               FIX MY BRAIN
@@ -37,7 +37,7 @@ export default function RootLayout({
             <MobileNav />
           </div>
         </nav>
-        {children}
+        <div className="min-h-0 flex-1">{children}</div>
       </body>
     </html>
   );

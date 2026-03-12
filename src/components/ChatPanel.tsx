@@ -49,17 +49,18 @@ function formatTime(ts: number) {
 
 interface ChatPanelProps {
   wallClockTime?: number | null;
+  segmentStartTime?: number | null;
   isLive?: boolean;
 }
 
-export default function ChatPanel({ wallClockTime = null, isLive = true }: ChatPanelProps) {
+export default function ChatPanel({ wallClockTime = null, segmentStartTime = null, isLive = true }: ChatPanelProps) {
   const [username, setUsername] = useState<string | null>(null);
   const [usernameInput, setUsernameInput] = useState("");
   const [messageText, setMessageText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { isLoading, error, data } = db.useQuery({
-    messages: { $: { order: { serverCreatedAt: "asc" }, limit: 100 } },
+    messages: { $: { order: { serverCreatedAt: "asc" } } },
   });
 
   const messages = data?.messages ?? [];
@@ -104,7 +105,7 @@ export default function ChatPanel({ wallClockTime = null, isLive = true }: ChatP
         </div>
       )}
       {/* Chat Messages Area */}
-      <div className="chat-scroll flex flex-1 flex-col-reverse overflow-y-auto p-4">
+      <div className="chat-scroll flex flex-1 flex-col-reverse gap-3 overflow-y-auto px-4 pt-4 pb-3">
         {isLoading && (
           <p className="text-center text-xs font-bold uppercase tracking-wider text-neutral-600">
             Loading...
@@ -121,7 +122,7 @@ export default function ChatPanel({ wallClockTime = null, isLive = true }: ChatP
           </p>
         )}
         {[...visibleMessages].reverse().map((msg) => (
-          <div key={msg.id} className="mb-3">
+          <div key={msg.id}>
             <span className="text-xs font-black uppercase tracking-wider" style={{ color: nameColor(msg.username) }}>
               {msg.username}
             </span>
