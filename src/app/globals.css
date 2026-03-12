@@ -61,3 +61,14 @@ body {
   scrollbar-color: #404040 transparent;
 }
 
+/* Hide native video timeline/seek bar but keep play/pause/volume/fullscreen */
+video.hide-timeline::-webkit-media-controls-timeline {
+  display: none !important;
+}
+video.hide-timeline::-webkit-media-controls-current-time-display {
+  display: none !important;
+}
+video.hide-timeline::-webkit-media-controls-time-remaining-display {
+  display: none !important;
+}
+

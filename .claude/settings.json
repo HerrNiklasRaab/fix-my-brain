@@ -47,7 +47,8 @@
       "Bash(vercel --yes)",
       "Bash(vercel inspect:*)",
       "Bash(vercel ls:*)",
-      "Bash(vercel project:*)"
+      "Bash(vercel project:*)",
+      "Bash(source .env.local)"
     ],
     "additionalDirectories": [
       "/tmp/cognee-repo/cognee-frontend",
