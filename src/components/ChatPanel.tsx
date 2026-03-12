@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, FormEvent, useCallback } from "react";
+import { useState, useRef, useEffect, useMemo, FormEvent } from "react";
 import { id } from "@instantdb/react";
 import db from "@/lib/instantdb";
 
@@ -47,7 +47,12 @@ function formatTime(ts: number) {
   return `${date.toLocaleDateString([], { month: "short", day: "numeric" })} ${time}`;
 }
 
-export default function ChatPanel() {
+interface ChatPanelProps {
+  wallClockTime?: number | null;
+  isLive?: boolean;
+}
+
+export default function ChatPanel({ wallClockTime = null, isLive = true }: ChatPanelProps) {
   const [username, setUsername] = useState<string | null>(null);
   const [usernameInput, setUsernameInput] = useState("");
   const [messageText, setMessageText] = useState("");
@@ -59,9 +64,16 @@ export default function ChatPanel() {
 
   const messages = data?.messages ?? [];
 
+  const visibleMessages = useMemo(() => {
+    if (isLive || wallClockTime == null) return messages;
+    return messages.filter((msg) => msg.createdAt <= wallClockTime);
+  }, [messages, wallClockTime, isLive]);
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+    if (isLive) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [visibleMessages.length, isLive]);
 
   function handleJoin(e: FormEvent) {
     e.preventDefault();
@@ -86,6 +98,11 @@ export default function ChatPanel() {
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col md:w-80 md:flex-initial md:border-l-2 md:border-neutral-800">
+      {!isLive && (
+        <div className="border-b-2 border-neutral-800 bg-neutral-900 px-4 py-2 text-center text-xs font-black uppercase tracking-wider text-yellow-500">
+          Viewing past chat
+        </div>
+      )}
       {/* Chat Messages Area */}
       <div className="chat-scroll flex flex-1 flex-col-reverse overflow-y-auto p-4">
         {isLoading && (
@@ -98,12 +115,12 @@ export default function ChatPanel() {
             Error loading chat
           </p>
         )}
-        {!isLoading && messages.length === 0 && (
+        {!isLoading && visibleMessages.length === 0 && (
           <p className="text-center text-xs font-bold uppercase tracking-wider text-neutral-600">
-            No messages yet
+            {isLive ? "No messages yet" : "No messages at this time"}
           </p>
         )}
-        {[...messages].reverse().map((msg) => (
+        {[...visibleMessages].reverse().map((msg) => (
           <div key={msg.id} className="mb-3">
             <span className="text-xs font-black uppercase tracking-wider" style={{ color: nameColor(msg.username) }}>
               {msg.username}
@@ -140,12 +157,14 @@ export default function ChatPanel() {
               type="text"
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
-              placeholder="Send a message..."
-              className="flex-1 border-2 border-neutral-700 bg-neutral-900 px-3 py-2 text-xs text-white placeholder-neutral-600 outline-none focus:border-neutral-500"
+              placeholder={isLive ? "Send a message..." : "Scrub to live to chat..."}
+              disabled={!isLive}
+              className="flex-1 border-2 border-neutral-700 bg-neutral-900 px-3 py-2 text-xs text-white placeholder-neutral-600 outline-none focus:border-neutral-500 disabled:opacity-50"
             />
             <button
               type="submit"
-              className="border-2 border-neutral-700 bg-neutral-900 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-neutral-800"
+              disabled={!isLive}
+              className="border-2 border-neutral-700 bg-neutral-900 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-neutral-800 disabled:opacity-50"
             >
               Send
             </button>

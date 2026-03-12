@@ -3,11 +3,14 @@
 import { useEffect, useRef } from "react";
 import Hls from "hls.js";
 import ChatPanel from "@/components/ChatPanel";
+import { useVideoPlaybackTime } from "@/hooks/useVideoPlaybackTime";
 
 export default function Livestream() {
   const playbackId = process.env.NEXT_PUBLIC_FASTPIX_PLAYBACK_ID;
   const isConfigured = !!playbackId;
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
+  const { wallClockTime, isLive } = useVideoPlaybackTime(videoRef, hlsRef);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -22,12 +25,16 @@ export default function Livestream() {
         maxBufferLength: 30,
         liveSyncDurationCount: 3,
       });
+      hlsRef.current = hls;
       hls.loadSource(src);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         video.play().catch(() => {});
       });
-      return () => hls.destroy();
+      return () => {
+        hlsRef.current = null;
+        hls.destroy();
+      };
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       // Safari native HLS
       video.src = src;
@@ -68,7 +75,7 @@ export default function Livestream() {
         </div>
 
         {/* Chat Panel */}
-        <ChatPanel />
+        <ChatPanel wallClockTime={wallClockTime} isLive={isLive} />
       </div>
     </div>
   );
